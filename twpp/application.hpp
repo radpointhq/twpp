@@ -299,9 +299,7 @@ public:
                     DispatchMessage(&msg);
                     // fallthrough
                 case ReturnCode::DsEvent:
-                    if (!usesCb){
-                        d()->m_readyMsg = event.message();
-                    }
+					d()->m_readyMsg = event.message();
 
                     break;
 
