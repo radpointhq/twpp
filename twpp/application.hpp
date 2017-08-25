@@ -351,9 +351,7 @@ public:
         switch (rc){
             case ReturnCode::NotDsEvent:
             case ReturnCode::DsEvent:
-                if (!usesCb){
-                    d()->m_readyMsg = twEvent.message();
-                }
+                d()->m_readyMsg = twEvent.message();
 
                 switch (d()->m_readyMsg){
                     case Msg::XferReady: // ok/scan button <=> Msg::EnableDs
