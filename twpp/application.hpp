@@ -196,15 +196,22 @@ public:
         if (success(rc)){
             d()->m_state = DsState::Open;
 
-            auto id = d()->m_srcId.id();
-            bool usesCb = false;
+            auto id = d()->m_srcId.id();                        
+
+            // TWAIN manual is rather confusing on this topic.
+            // Their example sends the registration to DSM, operation tripet documentation mentions DS as destination.
+            // Looking at some other applications, Windows seems to send this to DS, MacOS to DSM.
             Detail::CallBack2 cb2(callBack<void>, *Detail::alias_cast<UIntPtr*>(&id), Msg::Null);
-            if (success(dsm(DataGroup::Control, Dat::Callback2, Msg::RegisterCallback, cb2))){
-                usesCb = true;
-            } else {
-                Detail::CallBack cb1(callBack<void>, *Detail::alias_cast<Detail::CallBackConstant*>(&id), Msg::Null);
-                usesCb = success(dsm(DataGroup::Control, Dat::Callback, Msg::RegisterCallback, cb1));
+            Detail::CallBack cb1(callBack<void>, *Detail::alias_cast<Detail::CallBackConstant*>(&id), Msg::Null);
+
+            bool usesCb = success(dsm(DataGroup::Control, Dat::Callback2, Msg::RegisterCallback, cb2)) ||
+                    success(dsm(DataGroup::Control, Dat::Callback, Msg::RegisterCallback, cb1));
+
+#if defined(TWPP_DETAIL_OS_MAC)
+            if (!usesCb){
+                usesCb = success(dsm(nullptr, Dat::Callback, Msg::RegisterCallback, cb1));
             }
+#endif
 
             if (usesCb){
                 try {
@@ -1124,7 +1131,7 @@ private:
     void closeRootWindow() noexcept{
 #if defined(TWPP_DETAIL_OS_WIN)
         if (d()->m_rootWindow && d()->m_ownRootWindow){
-            CloseWindow(static_cast<HWND>(d()->m_rootWindow.raw()));
+            DestroyWindow(static_cast<HWND>(d()->m_rootWindow.raw()));
             d()->m_ownRootWindow = Handle();
         }
 #elif !defined(TWPP_DETAIL_OS_MAC) && !defined(TWPP_DETAIL_OS_LINUX)
